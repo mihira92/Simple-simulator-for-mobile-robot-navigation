@@ -1,3 +1,5 @@
+%Main code is under the pushbutton1_Callback
+
 function varargout = hw1(varargin)
 % HW1 MATLAB code for hw1.fig
 %      HW1, by itself, creates a new HW1 or raises the existing
@@ -22,7 +24,7 @@ function varargout = hw1(varargin)
 
 % Edit the above text to modify the response to help hw1
 
-% Last Modified by GUIDE v2.5 20-Feb-2017 03:18:29
+% Last Modified by GUIDE v2.5 20-Feb-2017 19:21:19
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -43,7 +45,6 @@ else
 end
 % End initialization code - DO NOT EDIT
 
-
 % --- Executes just before hw1 is made visible.
 function hw1_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
@@ -55,13 +56,11 @@ function hw1_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for hw1
 handles.output = hObject;
 
-
 % Update handles structure
 guidata(hObject, handles);
 
 % UIWAIT makes hw1 wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
-
 
 % --- Outputs from this function are returned to the command line.
 function varargout = hw1_OutputFcn(hObject, eventdata, handles) 
@@ -74,8 +73,8 @@ function varargout = hw1_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%% My code
-%%
+
+%% My code
 % --- Executes on button press in pushbutton1.
 function pushbutton1_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton1 (see GCBO)
@@ -94,7 +93,7 @@ map=2*(ones(MAX_X,MAX_Y));
 
 axis([1 MAX_X 1 MAX_Y]);
 axis square;
-grid on;
+%grid on;
 %hold on;
 
 %% Obstacle=-1,Target = 0,Robot=1,Free Space=2, Explored space=3
@@ -138,17 +137,17 @@ map(3,6) = -1;
 obs(3,7);
 map(3,7) = -1;
 
-obs(15,12);
-map(15,12) = -1;
+obs(14,14);
+map(14,14) = -1;
 
-obs(15,13);
-map(15,13) = -1;
+obs(14,15);
+map(14,15) = -1;
 
-obs(16,12);
-map(16,12) = -1;
+obs(15,14);
+map(15,14) = -1;
 
-obs(16,13);
-map(16,13) = -1;
+obs(15,15);
+map(15,15) = -1;
 
 obs(14,6);
 map(14,6) = -1;
@@ -186,10 +185,22 @@ map(9,2) = -1;
 obs(9,3);
 map(9,3) = -1;
 
+xt = [11;11;14]; yt = [10;12;11];
+patch(xt,yt,'red');
+
+for it = 11:1:12
+    for jt = 10:1:12
+        %obs(it,jt);
+        map(it,jt)=-1;
+    end
+end
+map
+map(13,11) = -1; map(14,11)=-1;
+
 % draw the target node
 
-map(16,8) = 0;
-patch([16 16+1 16+1 16], [8 8 8+1 8+1], 'green');
+map(18,11) = 0;
+patch([18 18+1 18+1 18], [11 11 11+1 11+1], 'green');
 
 %initializing Robot's current pose
 
@@ -202,16 +213,19 @@ rob = @(x,y,r) rectangle('Position',[x-r, y-r, 2*r, 2*r], 'Curvature',[1,1], 'Fa
 %%
 while (map(curX,curY) ~= 0)
     
-    cn = randi([1 8]);
-    [nextX, nextY, th] = nextPos(cn, curX, curY);
-    xy = [curX curY nextX nextY];
-    handles.xy = xy;
-    handles.map = map;
-    xdata = nextX
-    ydata(:,1) = nextY;
-    handles.xdata = xdata;
-    handles.ydata = ydata;
+    global xdata ydata th relX relY;
     
+    cn = randi([1 8]);                              % randomly selects a number from 1 to 8
+    [nextX, nextY, th] = nextPos(cn, curX, curY);   % pass the selected number to nextPos function
+    xdata = nextX;                                  % nextPos returns a pose (x,y,th)
+    ydata = nextY;
+    relX = nextX-curX;
+    relY = nextY-curY;
+    set(handles.xbox,'String',num2str(xdata));
+    set(handles.ybox,'String',num2str(ydata));
+    set(handles.thbox,'String',num2str(th));
+    set(handles.xrbox,'String',num2str(relX));
+    set(handles.yrbox,'String',num2str(relY));
     guidata(hObject, handles);
     
     if (map(nextX, nextY) ~= -1)
@@ -219,58 +233,17 @@ while (map(curX,curY) ~= 0)
         pause(0.1);
         delete(r1);
         map(nextX, nextY) = 1;          % updating new node as robot position in map
-        map(curX, curY) = 3;  
+        map(curX, curY) = 3;
+        
+        line([curX+0.5, nextX+0.5],[curY+0.5,nextY+0.5],'Color','b','LineWidth',2);
+        %handles.L = L;
+        %guidata(hObject, handles);
+        
         curX = nextX;
         curY = nextY;
-        if (curX == 16 && curY == 8)
+        if (curX == 18 && curY == 11)
             break
         end
     end
-    
-%[curX, curY, map] = nextPos(1, curX, curY, map);
-
-
 
 end
-% initialize the lists
-%{
-closed = [];
-open = [];
-
-% put all obstacles in closed list
-
-k=1;                %Dummy counter
-for i=1:MAX_X
-    for j=1:MAX_Y
-        if(map(i,j) == -1)
-            closed(k,1)=i; 
-            closed(k,2)=j; 
-            k=k+1;
-        end
-    end
-end
-%}
-
-% --- Executes on button press in pushbutton4.
-function pushbutton4_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton4 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-xy = handles.xy;
-curX = xy(1); curY = xy(2); nextX =xy(3); nextY = xy(4); 
-map = handles.map;
-
-line([xy(1)+0.5, xy(3)+0.5],[xy(2)+0.5,xy(4)+0.5],'Color','b','LineWidth',2);
-    
-    
-
-
-% --- Executes during object creation, after setting all properties.
-function xbox_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to xbox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-xdata(:,1) = handles.xdata;
-set(handles.xbox,'String',num2str(xdata));
-
